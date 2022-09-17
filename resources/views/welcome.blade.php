@@ -130,3 +130,9 @@
         </div>
     </body>
 </html>
+
+
+{{-- 
+    Project Name: Recruit Management System
+    Channel: Development Kit
+ --}}
