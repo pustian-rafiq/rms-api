@@ -21,9 +21,9 @@ class UserTableSeeder extends Seeder
 
             // user
             [
-                'name' => 'Md. Rafiqul Islam',
+                'name' => 'Md. Rafiqul',
                 'slug' => Str::slug(Str::random(20)),
-                'email' => 'rafiqul.pust.cse@gmail.com',
+                'email' => 'rafiqul@gmail.com',
                 'password' => Hash::make('123456'),
                 'status' => 'active',
             ]

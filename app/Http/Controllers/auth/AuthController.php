@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\auth;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\VerifyUserJob;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Str;
 class AuthController extends Controller
 {
    /**
@@ -50,9 +52,14 @@ class AuthController extends Controller
             return response()->json($validator->errors()->toJson(), 400);
         }
         $user = User::create(array_merge(
-                    $validator->validated(),
-                    ['password' => bcrypt($request->password)]
-                ));
+            $validator->validated(),
+            ['password' => bcrypt($request->password),'slug'=>Str::random(15),'token'=>Str::random(20),'status'=>'active']
+        ));
+        //Veri email
+        if($user){
+            $details = ['name'=>$user->name, 'email'=>$user->email,'hashEmail'=>Crypt::encryptString($user->email),'token'=>$user->token];
+            dispatch(new VerifyUserJob($details));
+        }
         return response()->json([
             'message' => 'User successfully registered',
             'user' => $user
@@ -98,5 +105,18 @@ class AuthController extends Controller
             'expires_in' => auth()->factory()->getTTL() * 60,
             'user' => auth()->user()
         ]);
+    }
+
+//Veru user account
+    public function accountVerify($token,$email) {
+        $user = User::where([['email',Crypt::decryptString($email)],['token',$token]])->first();
+        if($user->token == $token){
+            $user->update([
+                'verify'=>true,
+                'token'=>null
+            ]);
+            return redirect()->to('http://127.0.0.1:8000/verify/success');
+        }
+        return redirect()->to('http://127.0.0.1:8000/verify/invalid_token');
     }
 }
