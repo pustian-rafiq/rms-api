@@ -34,6 +34,6 @@ class VerifyUserJob implements ShouldQueue
     public function handle()
     {
         $data = new VerifyUserEmail($this->details);
-        Mail::to($this->user->email)->send($data);
+        Mail::to($this->details['email'])->send($data);
     }
 }
