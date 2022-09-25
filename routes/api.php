@@ -23,4 +23,6 @@ Route::group([
     Route::post('/refresh', [AuthController::class, 'refresh']);
     Route::get('/user-profile', [AuthController::class, 'userProfile']);    
     Route::get('/verify/{token}/{email}', [AuthController::class, 'accountVerify']);    
+    Route::post('/password-reset', [AuthController::class, 'PasswordReset']);    
+    // Route::get('/password-reset/{token}/{email}', [AuthController::class, 'PasswordReset']);    
 });

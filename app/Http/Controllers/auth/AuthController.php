@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\auth;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\PasswordResetJob;
 use App\Jobs\VerifyUserJob;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 class AuthController extends Controller
@@ -17,7 +19,7 @@ class AuthController extends Controller
      * @return void
      */
     public function __construct() {
-        $this->middleware('auth:api', ['except' => ['login', 'register','accountVerify']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register','accountVerify','PasswordReset']]);
     }
     /**
      * Get a JWT via given credentials.
@@ -116,6 +118,38 @@ class AuthController extends Controller
                 'token'=>null
             ]);
             return redirect()->to('http://127.0.0.1:8000/verify/success');
+        }
+        return redirect()->to('http://127.0.0.1:8000/verify/invalid_token');
+    }
+//Password reset
+    public function PasswordReset(Request $request) {
+        $user = User::where('email',$request->email)->first();
+
+        if($user){
+            $token = Str::random(15);
+            $details = [
+                'name' => $user->name,
+                'email' => $user->email,
+                'hashEmail' => Crypt::encryptString( $user->email),
+                'token' => $token
+            ];
+            if(dispatch(new PasswordResetJob($details))){
+                DB::table('password_resets')->insert([
+                    'email' => $user->email,
+                    'token' => $token,
+                    'created_at' => now()
+                ]);
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Password reset link has been sent to your email address.'
+                ]);
+            }
+            // return redirect()->to('http://127.0.0.1:8000/verify/success');
+        }else{
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Invalid email address'
+            ]);
         }
         return redirect()->to('http://127.0.0.1:8000/verify/invalid_token');
     }
